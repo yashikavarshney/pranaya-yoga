@@ -72,29 +72,61 @@
         const { useState, useEffect, useRef } = React;
         const { motion, AnimatePresence } = window.Motion;
 
+        // --- Utility ---
         const cn = (...classes) => classes.filter(Boolean).join(' ');
 
+        // --- Lucide Icon Component ---
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             useEffect(() => {
-                if (window.lucide) { window.lucide.createIcons(); }
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
             }, [name]);
-            return <i data-lucide={name} style={{ width: size, height: size }} className={cn("inline-block", className)} strokeWidth="2" fill={fill}></i>;
+
+            return (
+                <i 
+                    data-lucide={name} 
+                    style={{ width: size, height: size }} 
+                    className={cn("inline-block", className)}
+                    strokeWidth="2"
+                    fill={fill}
+                ></i>
+            );
         };
 
+        // --- Components ---
         const Button = ({ children, className, variant = 'primary', onClick, disabled }) => {
             const variants = {
-                primary: 'bg-primary text-white shadow-lg shadow-primary/20 disabled:opacity-50',
+                primary: 'bg-primary text-white shadow-lg shadow-primary/20 disabled:opacity-50 disabled:shadow-none',
                 secondary: 'bg-secondary text-white disabled:opacity-50',
                 outline: 'border-2 border-neutral-200 bg-white text-neutral-900 disabled:opacity-50',
+                ghost: 'bg-transparent text-neutral-600 disabled:opacity-50'
             };
-            return <button onClick={onClick} disabled={disabled} className={cn("flex items-center justify-center gap-2 py-4 px-8 rounded-full font-semibold transition-all active:scale-95", variants[variant], className)}>{children}</button>;
+
+            return (
+                <button 
+                    onClick={onClick}
+                    disabled={disabled}
+                    className={cn(
+                        "flex items-center justify-center gap-2 py-4 px-8 rounded-full font-semibold transition-all active:scale-95",
+                        variants[variant],
+                        className
+                    )}
+                >
+                    {children}
+                </button>
+            );
         };
 
-        const Header = () => (
+        const Header = ({ onMenuClick }) => (
             <header className="flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-sm sticky top-0 z-40">
-                <Icon name="menu" className="text-neutral-600" />
+                <button onClick={onMenuClick} className="p-2 -ml-2 text-neutral-600">
+                    <Icon name="menu" />
+                </button>
                 <h1 className="font-display text-xl font-bold text-neutral-800">Pranaya</h1>
-                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-secondary font-bold text-sm">YV</div>
+                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-secondary font-bold text-sm">
+                    YV
+                </div>
             </header>
         );
 
@@ -105,103 +137,226 @@
                 { id: 'journal', label: 'JOURNAL', icon: 'book-open' },
                 { id: 'profile', label: 'PROFILE', icon: 'user' },
             ];
+
             return (
                 <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-neutral-100 px-6 py-4 flex justify-between items-center z-50">
-                    {items.map((item) => (
-                        <button key={item.id} onClick={() => onChange(item.id)} className={cn("flex flex-col items-center gap-1 transition-all", active === item.id ? "text-secondary" : "text-neutral-400")}>
-                            <div className={cn("p-2 rounded-2xl transition-all", active === item.id && "bg-accent/50 text-secondary")}><Icon name={item.icon} size={20} /></div>
-                            <span className="text-[10px] font-bold tracking-wider">{item.label}</span>
-                        </button>
-                    ))}
+                    {items.map((item) => {
+                        const isActive = active === item.id;
+                        return (
+                            <button 
+                                key={item.id}
+                                onClick={() => onChange(item.id)}
+                                className={cn(
+                                    "flex flex-col items-center gap-1 transition-all",
+                                    isActive ? "text-secondary" : "text-neutral-400"
+                                )}
+                            >
+                                <div className={cn(
+                                    "p-2 rounded-2xl transition-all",
+                                    isActive && "bg-accent/50 text-secondary"
+                                )}>
+                                    <Icon name={item.icon} size={20} />
+                                </div>
+                                <span className="text-[10px] font-bold tracking-wider">{item.label}</span>
+                            </button>
+                        );
+                    })}
                 </div>
             );
         };
 
+        // --- Screens ---
+        const Onboarding = ({ onNext }) => (
+            <div className="h-full flex flex-col bg-white p-6 pt-10 items-center">
+                <div className="w-full aspect-[4/5] rounded-[3rem] overflow-hidden shadow-xl mb-8">
+                    <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" />
+                </div>
+                <h1 className="font-display text-3xl font-bold text-neutral-900 mb-2 text-center">Begin gently.</h1>
+                <p className="text-neutral-500 mb-8 text-center text-sm">Your journey to inner peace starts here</p>
+                <Button onClick={onNext} className="w-full max-w-[280px]">Let's Begin <Icon name="arrow-right" size={20} /></Button>
+            </div>
+        );
+
+        const Home = ({ onComplete, onContest }) => (
+            <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                <Header />
+                <div className="px-6 py-4">
+                    <p className="text-[10px] font-bold tracking-[0.2em] text-neutral-400 uppercase mb-1">Your Morning Ritual</p>
+                    <h2 className="font-display text-3xl font-bold text-neutral-900 mb-6">Today's Flow</h2>
+                    <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] mb-8 cursor-pointer group" onClick={onComplete}>
+                        <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-8 left-8">
+                            <h3 className="text-2xl font-bold text-white mb-4">Solar Vinyasa Awakening</h3>
+                            <Button className="py-2 px-4 text-sm">Begin Practice <Icon name="play" size={16} fill="currentColor" /></Button>
+                        </div>
+                    </div>
+                    <div className="bg-accent rounded-[2rem] p-8 mb-8 relative overflow-hidden cursor-pointer" onClick={onContest}>
+                        <h3 className="text-2xl font-bold text-secondary mb-2">Voice of Yoga</h3>
+                        <p className="text-secondary/70 text-sm mb-6">Join the Global challenge.</p>
+                        <Button className="py-2.5 px-5 text-sm bg-[#F26651]">Join Challenge</Button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const PracticeCompleted = ({ onDone }) => (
+            <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white">
+                <div className="w-48 h-48 rounded-full bg-accent flex items-center justify-center mb-8">
+                    <Icon name="check-circle-2" size={64} className="text-secondary" />
+                </div>
+                <h1 className="font-display text-4xl font-bold text-neutral-900 mb-6 leading-tight">That felt nice</h1>
+                <Button onClick={onDone} className="w-full">Done <Icon name="arrow-right" size={20} /></Button>
+            </div>
+        );
+
+        const ContestScreen = ({ onBeginSubmission }) => (
+            <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                <Header />
+                <div className="px-6 py-4">
+                    <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] mb-12">
+                        <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-10 left-8 right-8">
+                            <p className="text-[10px] font-bold text-accent uppercase tracking-[0.2em] mb-2">International Competition</p>
+                            <h2 className="text-4xl font-bold text-white mb-4 leading-tight">Voice of Yoga</h2>
+                            <p className="text-white/70 text-sm leading-relaxed">Share your journey, inspire the world.</p>
+                        </div>
+                    </div>
+                    <div className="bg-[#FAF9F6] rounded-[2.5rem] p-8 mb-8 border border-neutral-50">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-10 h-0.5 bg-primary" />
+                            <p className="text-[10px] font-bold text-secondary uppercase tracking-widest">Current Theme</p>
+                        </div>
+                        <h3 className="text-3xl font-bold text-neutral-900 mb-6">The Alchemy of Stillness</h3>
+                        <p className="text-neutral-500 text-sm leading-relaxed mb-8">Explore how silence and inactivity transform the mind.</p>
+                        <div className="flex flex-col gap-3">
+                            <Button onClick={onBeginSubmission} className="w-full bg-[#F26651]">Begin Submission</Button>
+                            <Button variant="outline" className="w-full border-none shadow-sm bg-white">View Guidelines</Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const CreateJingle = ({ onNext, onJingleCreated }) => {
+            const [loading, setLoading] = useState(false);
+            const handleCompose = () => {
+                setLoading(true);
+                setTimeout(() => {
+                    onJingleCreated("A soft vocal jingle inspired by the morning dew and the first breath of a sunrise practice.");
+                    setLoading(false);
+                    onNext();
+                }, 1500);
+            };
+            return (
+                <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                    <Header />
+                    <div className="px-6 py-4">
+                        <h2 className="font-display text-4xl font-bold text-neutral-900 mb-4">Create Your Jingle</h2>
+                        <div className="bg-[#F8F5F0] rounded-[2rem] p-8 mb-8">
+                            <input type="text" placeholder="Contest Title" className="w-full p-4 rounded-xl mb-4" defaultValue="Morning Gratitude Flow" />
+                            <Button onClick={handleCompose} className="w-full" disabled={loading}>
+                                {loading ? "Composing..." : "Compose My Jingle"}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ReviewJingle = ({ onNext, description }) => (
+            <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                <Header />
+                <div className="px-6 py-4 text-center">
+                    <h2 className="font-display text-4xl font-bold text-neutral-900 mb-8">Review your jingle</h2>
+                    <div className="bg-white rounded-[3rem] p-10 shadow-xl mb-8">
+                        <Icon name="mic" size={48} className="mx-auto text-secondary mb-4" />
+                        <p className="text-neutral-600 mb-8">{description}</p>
+                        <Button onClick={onNext} className="w-full">Submit Voice <Icon name="arrow-right" size={20} /></Button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Success = ({ onBack }) => (
+            <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white">
+                <h1 className="font-display text-4xl font-bold text-neutral-900 mb-6 leading-tight">Your voice is now part<br />of something beautiful</h1>
+                <Button onClick={onBack} className="w-full">Back Home <Icon name="arrow-right" size={20} /></Button>
+            </div>
+        );
+
+        const Journal = () => (
+            <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                <Header />
+                <div className="px-6 py-4">
+                    <h2 className="font-display text-3xl font-bold text-neutral-900 mb-6">Your Journal</h2>
+                    {[
+                        { date: 'Today, April 14', title: 'Morning Gratitude', content: 'The breath felt light today.' },
+                        { date: 'Yesterday, April 13', title: 'Evening Wind Down', content: 'Felt very calm after the session.' }
+                    ].map((entry, i) => (
+                        <div key={i} className="bg-white rounded-[2rem] p-6 shadow-sm border border-neutral-100 mb-4">
+                            <p className="text-[10px] font-bold text-neutral-400 uppercase">{entry.date}</p>
+                            <h3 className="font-bold text-neutral-900">{entry.title}</h3>
+                            <p className="text-neutral-500 text-sm">{entry.content}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+
+        const Profile = () => (
+            <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                <Header />
+                <div className="px-6 py-4 flex flex-col items-center">
+                    <div className="w-32 h-32 rounded-full bg-accent overflow-hidden mb-4 border-4 border-white shadow-lg">
+                        <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" />
+                    </div>
+                    <h2 className="font-display text-2xl font-bold text-neutral-900">Yashika Varshney</h2>
+                    <p className="text-neutral-400 text-sm mb-8">Mindful Practitioner since 2023</p>
+                </div>
+            </div>
+        );
+
+        // --- Main App ---
         const App = () => {
             const [screen, setScreen] = useState('onboarding');
-            const [jingleDesc, setJingleDesc] = useState("");
-
-            const screens = {
-                onboarding: (
-                    <div className="h-full flex flex-col bg-white p-6 pt-10 items-center">
-                        <div className="w-full aspect-[4/5] rounded-[3rem] overflow-hidden shadow-xl mb-8">
-                            <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" />
-                        </div>
-                        <h1 className="font-display text-3xl font-bold text-neutral-900 mb-2">Begin gently.</h1>
-                        <p className="text-neutral-500 mb-8 text-sm">Your journey to inner peace starts here</p>
-                        <Button onClick={() => setScreen('home')} className="w-full max-w-[280px]">Let's Begin <Icon name="arrow-right" size={20} /></Button>
-                    </div>
-                ),
-                home: (
-                    <div className="h-full overflow-y-auto hide-scrollbar pb-24">
-                        <Header />
-                        <div className="px-6 py-4">
-                            <h2 className="font-display text-3xl font-bold text-neutral-900 mb-6">Today's Flow</h2>
-                            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] mb-8 cursor-pointer group" onClick={() => setScreen('completed')}>
-                                <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                <div className="absolute bottom-8 left-8"><h3 className="text-2xl font-bold text-white mb-4">Solar Vinyasa Awakening</h3><Button className="py-2 px-4 text-sm">Begin Practice <Icon name="play" size={16} fill="currentColor" /></Button></div>
-                            </div>
-                            <div className="bg-accent rounded-[2rem] p-8 mb-8 relative overflow-hidden cursor-pointer" onClick={() => setScreen('contest')}>
-                                <h3 className="text-2xl font-bold text-secondary mb-2">Voice of Yoga</h3>
-                                <p className="text-secondary/70 text-sm mb-6">Join the Global challenge.</p>
-                                <Button className="py-2.5 px-5 text-sm bg-[#F26651]">Join Challenge</Button>
-                            </div>
-                        </div>
-                    </div>
-                ),
-                completed: (
-                    <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white">
-                        <div className="w-48 h-48 rounded-full bg-accent flex items-center justify-center mb-8"><Icon name="check-circle-2" size={64} className="text-secondary" /></div>
-                        <h1 className="font-display text-4xl font-bold text-neutral-900 mb-6">That felt nice</h1>
-                        <Button onClick={() => setScreen('home')} className="w-full">Done <Icon name="arrow-right" size={20} /></Button>
-                    </div>
-                ),
-                contest: (
-                    <div className="h-full overflow-y-auto hide-scrollbar pb-24">
-                        <Header />
-                        <div className="px-6 py-4">
-                            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] mb-12">
-                                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                <div className="absolute bottom-10 left-8 right-8"><h2 className="text-4xl font-bold text-white mb-4">Voice of Yoga</h2><p className="text-white/70 text-sm">Share your journey, inspire the world.</p></div>
-                            </div>
-                            <div className="bg-[#FAF9F6] rounded-[2.5rem] p-8 mb-8 border border-neutral-50">
-                                <h3 className="text-3xl font-bold text-neutral-900 mb-6">The Alchemy of Stillness</h3>
-                                <Button onClick={() => setScreen('success')} className="w-full bg-[#F26651]">Begin Submission</Button>
-                            </div>
-                        </div>
-                    </div>
-                ),
-                success: (
-                    <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white">
-                        <h1 className="font-display text-4xl font-bold text-neutral-900 mb-6">Submitted!</h1>
-                        <Button onClick={() => setScreen('home')} className="w-full">Back Home <Icon name="arrow-right" size={20} /></Button>
-                    </div>
-                ),
-                journal: (
-                    <div className="h-full overflow-y-auto hide-scrollbar pb-24"><Header /><div className="px-6 py-4"><h2 className="font-display text-3xl font-bold text-neutral-900 mb-6">Your Journal</h2><div className="bg-white rounded-[2rem] p-6 shadow-sm border border-neutral-100 mb-4"><p className="text-[10px] font-bold text-neutral-400 uppercase">Today, April 14</p><h3 className="font-bold text-neutral-900">Morning Gratitude</h3><p className="text-neutral-500 text-sm">The breath felt light today.</p></div></div></div>
-                ),
-                profile: (
-                    <div className="h-full overflow-y-auto hide-scrollbar pb-24"><Header /><div className="px-6 py-4 flex flex-col items-center"><div className="w-32 h-32 rounded-full bg-accent overflow-hidden mb-4 border-4 border-white shadow-lg"><img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" /></div><h2 className="font-display text-2xl font-bold text-neutral-900">Yashika Varshney</h2><p className="text-neutral-400 text-sm mb-8">Mindful Practitioner since 2023</p></div></div>
-                )
-            };
+            const [jingleDescription, setJingleDescription] = useState("");
 
             return (
                 <div className="min-h-screen flex items-center justify-center py-10">
                     <div className="mobile-frame">
                         <AnimatePresence mode="wait">
-                            <motion.div key={screen} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="h-full">
-                                {screens[screen] || screens.onboarding}
+                            <motion.div
+                                key={screen}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3 }}
+                                className="h-full"
+                            >
+                                {screen === 'onboarding' && <Onboarding onNext={() => setScreen('home')} />}
+                                {screen === 'home' && <Home onComplete={() => setScreen('completed')} onContest={() => setScreen('contest')} />}
+                                {screen === 'completed' && <PracticeCompleted onDone={() => setScreen('home')} />}
+                                {screen === 'contest' && <ContestScreen onBeginSubmission={() => setScreen('create-jingle')} />}
+                                {screen === 'create-jingle' && <CreateJingle onNext={() => setScreen('review-jingle')} onJingleCreated={setJingleDescription} />}
+                                {screen === 'review-jingle' && <ReviewJingle onNext={() => setScreen('success')} description={jingleDescription} />}
+                                {screen === 'success' && <Success onBack={() => setScreen('home')} />}
+                                {screen === 'journal' && <Journal />}
+                                {screen === 'profile' && <Profile />}
                             </motion.div>
                         </AnimatePresence>
-                        {['home', 'contest', 'journal', 'profile'].includes(screen) && <BottomNav active={screen} onChange={setScreen} />}
+
+                        {['home', 'contest', 'journal', 'profile'].includes(screen) && (
+                            <BottomNav active={screen} onChange={setScreen} />
+                        )}
                     </div>
                 </div>
             );
         };
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
