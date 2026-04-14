@@ -4,62 +4,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pranaya - Yoga & Meditation</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React and Babel CDNs -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Framer Motion CDN -->
     <script src="https://unpkg.com/framer-motion@10.16.4/dist/framer-motion.js"></script>
+    
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Outfit:wght@700&display=swap" rel="stylesheet">
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Outfit', 'sans-serif'] },
-                    colors: { primary: '#F26651', secondary: '#8B5E3C', accent: '#FDE6D8', background: '#FAF9F6' }
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#F26651',
+                        secondary: '#8B5E3C',
+                        accent: '#FDE6D8',
+                        background: '#FAF9F6',
+                    }
                 }
             }
         }
     </script>
+
     <style type="text/tailwindcss">
-        .mobile-frame { width: 375px; height: 812px; @apply bg-background overflow-hidden relative shadow-2xl rounded-[3rem] border-8 border-neutral-900 mx-auto my-8; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        @layer base {
+            body {
+                @apply bg-neutral-100 text-neutral-900 font-sans;
+            }
+        }
+
+        .mobile-frame {
+            width: 375px;
+            height: 812px;
+            @apply bg-background overflow-hidden relative shadow-2xl rounded-[3rem] border-8 border-neutral-900 mx-auto my-8;
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
+
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
         const { motion, AnimatePresence } = window.Motion;
-        const Icon = ({ name, size = 24, className = "" }) => {
-            useEffect(() => { if (window.lucide) window.lucide.createIcons(); }, [name]);
-            return <i data-lucide={name} style={{ width: size, height: size }} className={className}></i>;
+
+        const cn = (...classes) => classes.filter(Boolean).join(' ');
+
+        const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
+            useEffect(() => {
+                if (window.lucide) { window.lucide.createIcons(); }
+            }, [name]);
+            return <i data-lucide={name} style={{ width: size, height: size }} className={cn("inline-block", className)} strokeWidth="2" fill={fill}></i>;
         };
+
+        const Button = ({ children, className, variant = 'primary', onClick, disabled }) => {
+            const variants = {
+                primary: 'bg-primary text-white shadow-lg shadow-primary/20 disabled:opacity-50',
+                secondary: 'bg-secondary text-white disabled:opacity-50',
+                outline: 'border-2 border-neutral-200 bg-white text-neutral-900 disabled:opacity-50',
+            };
+            return <button onClick={onClick} disabled={disabled} className={cn("flex items-center justify-center gap-2 py-4 px-8 rounded-full font-semibold transition-all active:scale-95", variants[variant], className)}>{children}</button>;
+        };
+
+        const Header = () => (
+            <header className="flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-sm sticky top-0 z-40">
+                <Icon name="menu" className="text-neutral-600" />
+                <h1 className="font-display text-xl font-bold text-neutral-800">Pranaya</h1>
+                <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-secondary font-bold text-sm">YV</div>
+            </header>
+        );
+
+        const BottomNav = ({ active, onChange }) => {
+            const items = [
+                { id: 'home', label: 'PRACTICE', icon: 'compass' },
+                { id: 'contest', label: 'CONTEST', icon: 'trophy' },
+                { id: 'journal', label: 'JOURNAL', icon: 'book-open' },
+                { id: 'profile', label: 'PROFILE', icon: 'user' },
+            ];
+            return (
+                <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-neutral-100 px-6 py-4 flex justify-between items-center z-50">
+                    {items.map((item) => (
+                        <button key={item.id} onClick={() => onChange(item.id)} className={cn("flex flex-col items-center gap-1 transition-all", active === item.id ? "text-secondary" : "text-neutral-400")}>
+                            <div className={cn("p-2 rounded-2xl transition-all", active === item.id && "bg-accent/50 text-secondary")}><Icon name={item.icon} size={20} /></div>
+                            <span className="text-[10px] font-bold tracking-wider">{item.label}</span>
+                        </button>
+                    ))}
+                </div>
+            );
+        };
+
         const App = () => {
             const [screen, setScreen] = useState('onboarding');
-            const renderScreen = () => {
-                if (screen === 'onboarding') return (
+            const [jingleDesc, setJingleDesc] = useState("");
+
+            const screens = {
+                onboarding: (
                     <div className="h-full flex flex-col bg-white p-6 pt-10 items-center">
-                        <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full aspect-[4/5] rounded-[3rem] object-cover mb-8 shadow-xl" />
+                        <div className="w-full aspect-[4/5] rounded-[3rem] overflow-hidden shadow-xl mb-8">
+                            <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" />
+                        </div>
                         <h1 className="font-display text-3xl font-bold text-neutral-900 mb-2">Begin gently.</h1>
-                        <button onClick={() => setScreen('home')} className="w-full bg-primary text-white py-4 rounded-full font-bold mt-auto mb-8">Let's Begin</button>
+                        <p className="text-neutral-500 mb-8 text-sm">Your journey to inner peace starts here</p>
+                        <Button onClick={() => setScreen('home')} className="w-full max-w-[280px]">Let's Begin <Icon name="arrow-right" size={20} /></Button>
                     </div>
-                );
-                return (
-                    <div className="h-full overflow-y-auto p-6">
-                        <header className="flex justify-between items-center mb-8">
-                            <Icon name="menu" /><h1 className="font-display text-xl font-bold">Pranaya</h1><div className="w-10 h-10 bg-accent rounded-full flex items-center justify-center font-bold text-secondary">YV</div>
-                        </header>
-                        <h2 className="text-3xl font-bold mb-6">Today's Flow</h2>
-                        <div className="bg-accent rounded-[2rem] p-8 mb-8" onClick={() => setScreen('onboarding')}>
-                            <h3 className="text-2xl font-bold text-secondary mb-2">Voice of Yoga</h3>
-                            <button className="bg-primary text-white px-6 py-2 rounded-full text-sm font-bold">Join Challenge</button>
+                ),
+                home: (
+                    <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                        <Header />
+                        <div className="px-6 py-4">
+                            <h2 className="font-display text-3xl font-bold text-neutral-900 mb-6">Today's Flow</h2>
+                            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] mb-8 cursor-pointer group" onClick={() => setScreen('completed')}>
+                                <img src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                <div className="absolute bottom-8 left-8"><h3 className="text-2xl font-bold text-white mb-4">Solar Vinyasa Awakening</h3><Button className="py-2 px-4 text-sm">Begin Practice <Icon name="play" size={16} fill="currentColor" /></Button></div>
+                            </div>
+                            <div className="bg-accent rounded-[2rem] p-8 mb-8 relative overflow-hidden cursor-pointer" onClick={() => setScreen('contest')}>
+                                <h3 className="text-2xl font-bold text-secondary mb-2">Voice of Yoga</h3>
+                                <p className="text-secondary/70 text-sm mb-6">Join the Global challenge.</p>
+                                <Button className="py-2.5 px-5 text-sm bg-[#F26651]">Join Challenge</Button>
+                            </div>
                         </div>
                     </div>
-                );
+                ),
+                completed: (
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white">
+                        <div className="w-48 h-48 rounded-full bg-accent flex items-center justify-center mb-8"><Icon name="check-circle-2" size={64} className="text-secondary" /></div>
+                        <h1 className="font-display text-4xl font-bold text-neutral-900 mb-6">That felt nice</h1>
+                        <Button onClick={() => setScreen('home')} className="w-full">Done <Icon name="arrow-right" size={20} /></Button>
+                    </div>
+                ),
+                contest: (
+                    <div className="h-full overflow-y-auto hide-scrollbar pb-24">
+                        <Header />
+                        <div className="px-6 py-4">
+                            <div className="relative rounded-[2.5rem] overflow-hidden aspect-[4/5] mb-12">
+                                <img src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1000" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                <div className="absolute bottom-10 left-8 right-8"><h2 className="text-4xl font-bold text-white mb-4">Voice of Yoga</h2><p className="text-white/70 text-sm">Share your journey, inspire the world.</p></div>
+                            </div>
+                            <div className="bg-[#FAF9F6] rounded-[2.5rem] p-8 mb-8 border border-neutral-50">
+                                <h3 className="text-3xl font-bold text-neutral-900 mb-6">The Alchemy of Stillness</h3>
+                                <Button onClick={() => setScreen('success')} className="w-full bg-[#F26651]">Begin Submission</Button>
+                            </div>
+                        </div>
+                    </div>
+                ),
+                success: (
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-white">
+                        <h1 className="font-display text-4xl font-bold text-neutral-900 mb-6">Submitted!</h1>
+                        <Button onClick={() => setScreen('home')} className="w-full">Back Home <Icon name="arrow-right" size={20} /></Button>
+                    </div>
+                ),
+                journal: (
+                    <div className="h-full overflow-y-auto hide-scrollbar pb-24"><Header /><div className="px-6 py-4"><h2 className="font-display text-3xl font-bold text-neutral-900 mb-6">Your Journal</h2><div className="bg-white rounded-[2rem] p-6 shadow-sm border border-neutral-100 mb-4"><p className="text-[10px] font-bold text-neutral-400 uppercase">Today, April 14</p><h3 className="font-bold text-neutral-900">Morning Gratitude</h3><p className="text-neutral-500 text-sm">The breath felt light today.</p></div></div></div>
+                ),
+                profile: (
+                    <div className="h-full overflow-y-auto hide-scrollbar pb-24"><Header /><div className="px-6 py-4 flex flex-col items-center"><div className="w-32 h-32 rounded-full bg-accent overflow-hidden mb-4 border-4 border-white shadow-lg"><img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200" className="w-full h-full object-cover" /></div><h2 className="font-display text-2xl font-bold text-neutral-900">Yashika Varshney</h2><p className="text-neutral-400 text-sm mb-8">Mindful Practitioner since 2023</p></div></div>
+                )
             };
-            return <div className="min-h-screen bg-neutral-100 flex items-center justify-center"><div className="mobile-frame">{renderScreen()}</div></div>;
+
+            return (
+                <div className="min-h-screen flex items-center justify-center py-10">
+                    <div className="mobile-frame">
+                        <AnimatePresence mode="wait">
+                            <motion.div key={screen} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="h-full">
+                                {screens[screen] || screens.onboarding}
+                            </motion.div>
+                        </AnimatePresence>
+                        {['home', 'contest', 'journal', 'profile'].includes(screen) && <BottomNav active={screen} onChange={setScreen} />}
+                    </div>
+                </div>
+            );
         };
+
         ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
